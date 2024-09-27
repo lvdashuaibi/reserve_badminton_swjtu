@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Badminton Court Reservation</title>
+    <style>
+        table, th, td {
+            border: 1px solid black;
+            border-collapse: collapse;
+            padding: 5px;
+        }
+        th, td {
+            text-align: center;
+        }
+        .expired {
+            background-color: grey;
+            color: white;
+        }
+        .available {
+            background-color: white;
+            color: black;
+        }
+        .booked {
+            background-color: lightgrey;
+            color: black;
+        }
+    </style>
+</head>
+<body>
+<h1>预定羽毛球场地</h1>
+
+<!-- 预定表单部分 -->
+<form id="reservationForm">
+    <label for="date">预定日期:</label>
+    <input type="date" id="date" name="date" required><br><br>
+
+    <label for="timeSlot">选择时间:</label>
+    <select id="timeSlot" name="timeSlot" required>
+        <option value="09:00:00">09:00</option>
+        <option value="10:00:00">10:00</option>
+        <option value="11:00:00">11:00</option>
+        <option value="12:00:00">12:00</option>
+        <option value="13:00:00">13:00</option>
+        <option value="14:00:00">14:00</option>
+        <option value="15:00:00">15:00</option>
+        <option value="16:00:00">16:00</option>
+        <option value="17:00:00">17:00</option>
+        <option value="18:00:00">18:00</option>
+        <option value="19:00:00">19:00</option>
+        <option value="20:00:00">20:00</option>
+        <option value="21:00:00">21:00</option>
+    </select><br><br>
+
+    <label for="courtNum">选择场地号:</label>
+    <select id="courtNum" name="courtNum" required>
+        <option value="1">1号场地</option>
+        <option value="2">2号场地</option>
+        <option value="3">3号场地</option>
+        <option value="4">4号场地</option>
+        <option value="5">5号场地</option>
+        <option value="6">6号场地</option>
+        <option value="7">7号场地</option>
+        <option value="8">8号场地</option>
+        <option value="9">9号场地</option>
+    </select><br><br>
+
+    <button type="submit">预定场地</button>
+</form>
+
+<!-- 场地信息展示部分 -->
+<h2>场地预定情况</h2>
+<table id="sessionsTable">
+    <thead>
+    <tr>
+        <th>场地号</th>
+        <th>09:00</th>
+        <th>10:00</th>
+        <th>11:00</th>
+        <th>12:00</th>
+        <th>13:00</th>
+        <th>14:00</th>
+        <th>15:00</th>
+        <th>16:00</th>
+        <th>17:00</th>
+        <th>18:00</th>
+        <th>19:00</th>
+        <th>20:00</th>
+        <th>21:00</th>
+    </tr>
+    </thead>
+    <tbody>
+    <!-- 场地数据将通过JavaScript插入 -->
+    </tbody>
+</table>
+
+<script>
+    // 处理预定表单提交的事件
+    document.getElementById("reservationForm").addEventListener("submit", async function(event) {
+        event.preventDefault();
+
+        const date = document.getElementById("date").value;
+        const timeSlot = document.getElementById("timeSlot").value;
+        const courtNum = document.getElementById("courtNum").value;
+
+        const response = await fetch("/reserve", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ date, timeSlot, courtNum })
+        });
+
+        const result = await response.text();
+
+        // 使用弹窗显示预定结果
+        alert(result);
+    });
+
+    // 加载场地信息并展示在表格中
+    async function loadSessions() {
+        let date = document.getElementById("date").value;
+        if (!date) {
+            // 如果没有选择日期，则使用当天日期
+            const today = new Date();
+            date = today.toISOString().split('T')[0]; // 格式化为 YYYY-MM-DD
+            document.getElementById("date").value = date; // 更新输入框的值
+        }
+
+        const response = await fetch(`/getSessions?date=${date}`);
+        const data = await response.json();
+
+        const tableBody = document.getElementById("sessionsTable").getElementsByTagName("tbody")[0];
+        tableBody.innerHTML = ''; // 清空表格内容
+
+        for (let i = 1; i <= 9; i++) {
+            const row = document.createElement("tr");
+
+            // 第一列：场地号
+            const cell = document.createElement("td");
+            cell.textContent = `${i}号场地`;
+            row.appendChild(cell);
+
+            // 填充时段信息
+            for (let j = 0; j < 13; j++) {
+                const timeSlot = `${(9 + j).toString().padStart(2, '0')}:00:00`;
+                const session = data.flat().find(s => s.placeName === `${i}号羽毛球` && s.openStartTime === timeSlot);
+
+                const sessionCell = document.createElement("td");
+                if (session) {
+                    switch (session.sessionsStatus) {
+                        case "EXPIRED":
+                            sessionCell.textContent = "已过期";
+                            sessionCell.className = "expired";
+                            break;
+                        case "NO_RESERVED":
+                            sessionCell.textContent = "可预订";
+                            sessionCell.className = "available";
+                            break;
+                        case "FULLY_BOOKED":
+                            sessionCell.textContent = "已预定";
+                            sessionCell.className = "booked";
+                            break;
+                        default:
+                            sessionCell.textContent = "无信息";
+                            break;
+                    }
+                } else {
+                    sessionCell.textContent = "无信息";
+                }
+                row.appendChild(sessionCell);
+            }
+
+            tableBody.appendChild(row);
+        }
+    }
+
+    // 当页面加载时以及日期选择器的值发生变化时，自动加载对应的场地信息
+    document.addEventListener("DOMContentLoaded", loadSessions);
+    document.getElementById("date").addEventListener("change", loadSessions);
+</script>
+</body>
+</html>
