@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/gin-gonic/gin"
-	"gopkg.in/gomail.v2"
 	"io"
 	"io/ioutil"
 	"log"
@@ -35,7 +34,7 @@ func Reservation(c *gin.Context, req entity.GetSessionIDRequest) (interface{}, e
 
 	if now.After(nextReservationTime) {
 		// 如果当前时间已经过了当天22:30，直接预定
-		go reserveCourtAtTime(token, sessionID, struct {
+		go reserveCourtAtTime(token, sessionID, username, struct {
 			Date     string
 			TimeSlot string
 			CourtNum string
@@ -43,7 +42,7 @@ func Reservation(c *gin.Context, req entity.GetSessionIDRequest) (interface{}, e
 	} else {
 		// 等待到22:30再发起预定请求
 		time.AfterFunc(nextReservationTime.Sub(now), func() {
-			reserveCourtAtTime(token, sessionID, struct {
+			reserveCourtAtTime(token, sessionID, username, struct {
 				Date     string
 				TimeSlot string
 				CourtNum string
@@ -109,13 +108,13 @@ func getSessionID(token, fieldID, date, timeSlot, courtName, sportTypeID string)
 	return "", fmt.Errorf("no available sessions found")
 }
 
-func reserveCourtAtTime(token string, sessionID string, req struct {
+func reserveCourtAtTime(token string, sessionID string, username string, req struct {
 	Date     string
 	TimeSlot string
 	CourtNum string
 }) {
 	// 预定场地
-	err := reserveCourt(token, sessionID, entity.FieldID, req.Date, req.CourtNum+"号羽毛球", entity.SportTypeID)
+	err := reserveCourt(token, sessionID, entity.FieldID, req.Date, req.CourtNum+"号羽毛球", entity.SportTypeID, username, req.TimeSlot)
 	if err != nil {
 		// 记录失败的日志或通知管理员
 		return
@@ -123,7 +122,7 @@ func reserveCourtAtTime(token string, sessionID string, req struct {
 	// 记录成功的预定操作
 }
 
-func reserveCourt(token, sessionID, fieldID, date, courtName, sportTypeID string) error {
+func reserveCourt(token, sessionID, fieldID, date, courtName, sportTypeID, username, timeSlot string) error {
 	// 定义最大重试时间为2小时
 	retryDuration := 3 * time.Hour
 	// 定义每次重试的间隔时间，例如每1分钟重试一次
@@ -165,19 +164,6 @@ func reserveCourt(token, sessionID, fieldID, date, courtName, sportTypeID string
 	req.Header.Set("Pragma", "no-cache")
 	req.Header.Set("Expires", "0")
 
-	// 创建一个新的邮件对象
-	m := gomail.NewMessage()
-
-	// 设置发件人和收件人
-	m.SetHeader("From", "2175407289@qq.com")
-	m.SetHeader("To", "2608485769@qq.com")
-
-	// 设置邮件主题
-	m.SetHeader("Subject", "Go 语言发送的测试邮件")
-
-	// 创建 SMTP 客户端
-	d := gomail.NewDialer("smtp.qq.com", 465, "2175407289@qq.com", "rurlinhdptfwechf")
-
 	for time.Since(startTime) < retryDuration {
 		client := &http.Client{}
 		resp, err := client.Do(req)
@@ -200,11 +186,9 @@ func reserveCourt(token, sessionID, fieldID, date, courtName, sportTypeID string
 			time.Sleep(retryInterval) // 等待retryInterval后重试
 		} else if strings.Contains(string(bodyBytes), "200") {
 			// 设置邮件正文
-			content := fmt.Sprintf("场地：%s，时间 ：%s,预定成功！", courtName, date)
-			m.SetBody("text/plain", content)
-			// 发送邮件
-			if err := d.DialAndSend(m); err != nil {
-				log.Println("邮件发送失败:", err)
+			err := SendMessage(db.GetEmailByUserName(username), date, courtName, timeSlot, "预定成功！请及时支付")
+			if err != nil {
+				log.Println("邮件发送失败")
 			}
 			log.Println("预定成功!")
 			return nil

@@ -1,6 +1,7 @@
 package db
 
 import (
+	"errors"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"log"
@@ -12,6 +13,7 @@ type User struct {
 	Name     string `gorm:"unique"`
 	Password string `gorm:"size:255"`
 	Token    string
+	Email    string `gorm:"email"`
 }
 
 var (
@@ -99,4 +101,24 @@ func ChangePassword(username, newPassword string) error {
 func FindUsername(username string) bool {
 	err := db.Model(&User{}).Where("Name = ?", username)
 	return err == nil
+}
+
+func GetEmailByUserName(username string) string {
+	// 定义一个 User 结构体实例
+	user := &User{}
+
+	// 查询数据库，根据用户名获取用户记录
+	result := db.Where("name = ?", username).First(user)
+	if result.Error != nil {
+		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			// 如果找不到记录，返回空字符串或根据需求返回默认值
+			return ""
+		}
+		// 如果是其他错误，打印日志并返回空字符串
+		log.Println("Error querying user:", result.Error)
+		return ""
+	}
+
+	// 返回用户的邮箱
+	return user.Email
 }
