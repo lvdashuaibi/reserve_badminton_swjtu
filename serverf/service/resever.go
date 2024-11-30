@@ -30,7 +30,7 @@ func Reservation(c *gin.Context, req entity.GetSessionIDRequest) (interface{}, e
 
 	// 获取当前时间，计算到今天22:30的时间差
 	now := time.Now()
-	nextReservationTime := time.Date(now.Year(), now.Month(), now.Day(), 22, 30, 0, 600000000, now.Location())
+	nextReservationTime := time.Date(now.Year(), now.Month(), now.Day(), 22, 30, 0, entity.Second, now.Location())
 
 	if now.After(nextReservationTime) {
 		// 如果当前时间已经过了当天22:30，直接预定

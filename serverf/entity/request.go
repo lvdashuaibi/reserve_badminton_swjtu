@@ -37,3 +37,5 @@ type GetSessionIDRequest struct {
 	TimeSlot string `json:"timeSlot"`
 	CourtNum string `json:"courtNum"`
 }
+
+const Second = 400000000
