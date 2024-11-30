@@ -6,9 +6,9 @@ import (
 	db "serverf/midware"
 )
 
-func Register(c *gin.Context, Username, Password, badmintonToken string) error {
+func Register(c *gin.Context, opUsername, Username, Password, badmintonToken string) error {
 
-	if Username != "lwh" {
+	if opUsername != "lwh" {
 		return errors.New("你没有权限！！！！！")
 	}
 

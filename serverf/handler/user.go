@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"serverf/entity"
@@ -10,11 +11,14 @@ import (
 func HandleRegister(c *gin.Context) {
 	registerData := &entity.RegisterData{}
 
+	value, _ := c.Get("username")
+	opUsername := value.(string)
+
 	if err := c.BindJSON(&registerData); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	err := service.Register(c, registerData.Username, registerData.Password, registerData.Token)
+	err := service.Register(c, opUsername, registerData.Username, registerData.Password, registerData.Token)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -45,6 +49,11 @@ func HandleChangePassword(c *gin.Context) {
 
 func HandleLogin(c *gin.Context) {
 	loginData := &entity.LoginData{}
+	err := c.Bind(loginData)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	}
+	fmt.Println(loginData)
 
 	err, token := service.Login(c, loginData.Username, loginData.Password)
 	if err != nil {
