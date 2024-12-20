@@ -183,10 +183,10 @@ func reserveCourt(token, sessionID, fieldID, date, courtName, sportTypeID, usern
 
 		// 检查是否是 "预定日期未开放" 错误
 		if strings.Contains(string(bodyBytes), "预定日期未开放，请勿超期预定") {
-			log.Println("预定日期未开放，等待重试...")
+			log.Printf("%s号，时间：%s ：预定日期未开放，等待重试...", courtName, timeSlot)
 			time.Sleep(retryInterval) // 等待retryInterval后重试
 		} else if strings.Contains(string(bodyBytes), "已被占用") {
-			log.Println("显示已被占用，等待重试...")
+			log.Printf("\"%s号，时间：%s ：显示已被占用，等待重试...", courtName, timeSlot)
 			time.Sleep(retryInterval) // 等待retryInterval后重试
 		} else if strings.Contains(string(bodyBytes), "200") {
 			// 设置邮件正文
@@ -194,7 +194,7 @@ func reserveCourt(token, sessionID, fieldID, date, courtName, sportTypeID, usern
 			if err != nil {
 				log.Println("邮件发送失败")
 			}
-			log.Println("预定成功!")
+			log.Printf("\"%s号，时间：%s ：预定成功!", courtName, timeSlot)
 			return nil
 		} else {
 			// 如果是其他错误，直接返回
