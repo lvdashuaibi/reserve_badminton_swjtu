@@ -11,11 +11,12 @@ import (
 )
 
 type User struct {
-	ID       uint   `gorm:"primaryKey;autoIncrement"`
-	Name     string `gorm:"unique"`
-	Password string `gorm:"size:255"`
-	Token    string
-	Email    string `gorm:"email"`
+	ID          uint   `gorm:"primaryKey;autoIncrement"`
+	Name        string `gorm:"unique"`
+	Password    string `gorm:"size:255"`
+	Token       string
+	Email       string `gorm:"email"`
+	RequestTime int    `json:"request_time" gorm:"request_time"`
 }
 
 // DatabaseConfig 用来存储数据库配置信息
@@ -174,4 +175,24 @@ func GetEmailByUserName(username string) string {
 
 	// 返回用户的邮箱
 	return user.Email
+}
+
+func GetReqTimeByUserName(username string) (int, error) {
+	// 定义一个 User 结构体实例
+	user := &User{}
+
+	// 查询数据库，根据用户名获取用户记录
+	result := db.Where("name = ?", username).First(user)
+	if result.Error != nil {
+		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			// 如果找不到记录，返回空字符串或根据需求返回默认值
+			return 0, errors.New("找不到记录")
+		}
+		// 如果是其他错误，打印日志并返回空字符串
+		log.Println("Error querying user:", result.Error)
+		return 0, result.Error
+	}
+
+	// 返回用户的邮箱
+	return user.RequestTime, nil
 }
