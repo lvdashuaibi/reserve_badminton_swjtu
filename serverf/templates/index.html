@@ -4,349 +4,335 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>羽毛球场地预约</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <style>
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
             margin: 0;
             padding: 0;
-            background-color: #f4f4f9;
-            color: #333;
-        }
-        h1, h2 {
-            text-align: center;
-            color: #333;
+            background-color: #f3f4f6;
+            color: #1f2937;
         }
         .container {
-            width: 80%;
-            margin: 0 auto;
-            padding: 20px;
-            background-color: #fff;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            border-radius: 8px;
+            width: 95%;
+            max-width: 1400px;
+            margin: 2rem auto;
+            padding: 2rem;
+            background-color: white;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            border-radius: 1rem;
         }
-        form {
-            margin-bottom: 20px;
-        }
-        label {
-            margin-right: 10px;
-            font-weight: bold;
-        }
-        input[type="date"], input[type="text"], select {
-            padding: 8px;
-            margin: 5px 0;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            width: 100%;
-            box-sizing: border-box;
-        }
-        button {
-            padding: 10px 15px;
-            background-color: #007bff;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 16px;
-        }
-        button:hover {
-            background-color: #0056b3;
+        .table-container {
+            overflow-x: auto;
+            margin: 2rem 0;
         }
         table {
             width: 100%;
-            border-collapse: collapse;
-            margin: 20px 0;
+            border-collapse: separate;
+            border-spacing: 2px;
         }
         th, td {
-            border: 1px solid #ddd;
-            padding: 10px;
+            padding: 1rem;
             text-align: center;
+            border-radius: 0.5rem;
+            transition: all 0.3s ease;
         }
         th {
-            background-color: #f2f2f2;
+            background-color: #1e40af;
+            color: white;
+            font-weight: 600;
         }
         td.expired {
-            background-color: grey;
+            background-color: #9ca3af;
             color: white;
+            cursor: not-allowed;
         }
         td.available {
-            background-color: #e2f0ff;
-            color: #333;
+            background-color: #e0f2fe;
+            color: #0369a1;
+            cursor: pointer;
+        }
+        td.available:hover {
+            background-color: #0ea5e9;
+            color: white;
+            transform: scale(1.05);
         }
         td.booked {
-            background-color: #d3d3d3;
-            color: #333;
+            background-color: #fee2e2;
+            color: #dc2626;
+            cursor: not-allowed;
+        }
+        td.selected {
+            background-color: #059669;
+            color: white;
+            transform: scale(1.05);
+        }
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #374151;
+        }
+        .form-input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #d1d5db;
+            border-radius: 0.5rem;
+            transition: all 0.3s ease;
+        }
+        .form-input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        .btn-primary {
+            background-color: #2563eb;
+            color: white;
+            border: none;
+        }
+        .btn-primary:hover {
+            background-color: #1d4ed8;
+            transform: translateY(-1px);
+        }
+        .selected-slots {
+            margin: 1rem 0;
+            padding: 1rem;
+            background-color: #f8fafc;
+            border-radius: 0.5rem;
+            border: 1px solid #e2e8f0;
+        }
+        .selected-slot-item {
+            display: inline-block;
+            margin: 0.25rem;
+            padding: 0.5rem 1rem;
+            background-color: #0ea5e9;
+            color: white;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+        .selected-slot-item button {
+            margin-left: 0.5rem;
+            color: white;
+            border: none;
+            background: none;
+            cursor: pointer;
         }
     </style>
 </head>
 <body>
 <div class="container">
-    <h1>预定羽毛球场地</h1>
+    <h1 class="text-3xl font-bold text-center mb-8">预定羽毛球场地</h1>
 
-    <!-- 预定表单部分 -->
-    <form id="reservationForm">
-        <label for="date">预定日期:</label>
-        <input type="date" id="date" name="date" required><br>
+    <div class="form-group">
+        <label for="date" class="form-label">预定日期:</label>
+        <input type="date" id="date" name="date" class="form-input" required>
+    </div>
 
-        <label for="timeSlot">选择时间:</label>
-        <select id="timeSlot" name="timeSlot" required>
-            <option value="09:00:00">09:00</option>
-            <option value="10:00:00">10:00</option>
-            <option value="11:00:00">11:00</option>
-            <option value="12:00:00">12:00</option>
-            <option value="13:00:00">13:00</option>
-            <option value="14:00:00">14:00</option>
-            <option value="15:00:00">15:00</option>
-            <option value="16:00:00">16:00</option>
-            <option value="17:00:00">17:00</option>
-            <option value="18:00:00">18:00</option>
-            <option value="19:00:00">19:00</option>
-            <option value="20:00:00">20:00</option>
-            <option value="21:00:00">21:00</option>
-        </select><br>
+    <div class="selected-slots">
+        <h3 class="text-lg font-semibold mb-2">已选择的场地:</h3>
+        <div id="selectedSlotsContainer"></div>
+    </div>
 
-        <label for="courtNum">选择场地号:</label>
-        <select id="courtNum" name="courtNum" required>
-            <option value="1">1号场地</option>
-            <option value="2">2号场地</option>
-            <option value="3">3号场地</option>
-            <option value="4">4号场地</option>
-            <option value="5">5号场地</option>
-            <option value="6">6号场地</option>
-            <option value="7">7号场地</option>
-            <option value="8">8号场地</option>
-            <option value="9">9号场地</option>
-        </select><br>
+    <button id="reserveButton" class="btn btn-primary w-full mb-8">预定选中场地</button>
 
-        <button type="submit">预定场地</button>
-    </form>
-
-    <!-- 场地信息展示部分 -->
-    <h2>场地预定情况</h2>
-    <table id="sessionsTable">
-        <thead>
-        <tr>
-            <th>场地号</th>
-            <th>09:00</th>
-            <th>10:00</th>
-            <th>11:00</th>
-            <th>12:00</th>
-            <th>13:00</th>
-            <th>14:00</th>
-            <th>15:00</th>
-            <th>16:00</th>
-            <th>17:00</th>
-            <th>18:00</th>
-            <th>19:00</th>
-            <th>20:00</th>
-            <th>21:00</th>
-        </tr>
-        </thead>
-        <tbody>
-        <!-- 场地数据将通过JavaScript插入 -->
-        </tbody>
-    </table>
+    <div class="table-container">
+        <table id="sessionsTable">
+            <thead>
+                <tr>
+                    <th>场地号</th>
+                    <th>09:00</th>
+                    <th>10:00</th>
+                    <th>11:00</th>
+                    <th>12:00</th>
+                    <th>13:00</th>
+                    <th>14:00</th>
+                    <th>15:00</th>
+                    <th>16:00</th>
+                    <th>17:00</th>
+                    <th>18:00</th>
+                    <th>19:00</th>
+                    <th>20:00</th>
+                    <th>21:00</th>
+                </tr>
+            </thead>
+            <tbody>
+            </tbody>
+        </table>
+    </div>
 
     <!-- Token 更新表单部分 -->
-    <h2>更新 Token</h2>
-    <form id="tokenForm">
-        <label for="newToken">新 Token:</label>
-        <input type="text" id="newToken" name="newToken" required><br>
-        <button type="submit">更新 Token</button>
-    </form>
+    <div class="mt-8 p-6 bg-gray-50 rounded-lg">
+        <h2 class="text-xl font-bold mb-4">更新 Token</h2>
+        <form id="tokenForm" class="space-y-4">
+            <div class="form-group">
+                <label for="newToken" class="form-label">新 Token:</label>
+                <input type="text" id="newToken" name="newToken" class="form-input" required>
+            </div>
+            <button type="submit" class="btn btn-primary">更新 Token</button>
+        </form>
+    </div>
 
     <!-- 注册表单部分 -->
-    <h2>注册账号</h2>
-    <form id="registerForm">
-        <label for="registerUsername">用户名:</label>
-        <input type="text" id="registerUsername" name="username" required><br>
-
-        <label for="registerPassword">密码:</label>
-        <input type="password" id="registerPassword" name="password" required><br>
-
-        <label for="registerToken">Token:</label>
-        <input type="text" id="registerToken" name="token" required><br>
-
-        <button type="submit">注册</button>
-    </form>
+    <div class="mt-8 p-6 bg-gray-50 rounded-lg">
+        <h2 class="text-xl font-bold mb-4">注册账号</h2>
+        <form id="registerForm" class="space-y-4">
+            <div class="form-group">
+                <label for="registerUsername" class="form-label">用户名:</label>
+                <input type="text" id="registerUsername" name="username" class="form-input" required>
+            </div>
+            <div class="form-group">
+                <label for="registerPassword" class="form-label">密码:</label>
+                <input type="password" id="registerPassword" name="password" class="form-input" required>
+            </div>
+            <div class="form-group">
+                <label for="registerToken" class="form-label">Token:</label>
+                <input type="text" id="registerToken" name="token" class="form-input" required>
+            </div>
+            <button type="submit" class="btn btn-primary">注册</button>
+        </form>
+    </div>
 
     <!-- 修改密码表单部分 -->
-    <h2>修改密码</h2>
-    <form id="changePasswordForm">
-        <label for="newPassword">新密码:</label>
-        <input type="password" id="newPassword" name="new_password" required><br>
-
-        <button type="submit">修改密码</button>
-    </form>
-
-
+    <div class="mt-8 p-6 bg-gray-50 rounded-lg">
+        <h2 class="text-xl font-bold mb-4">修改密码</h2>
+        <form id="changePasswordForm" class="space-y-4">
+            <div class="form-group">
+                <label for="newPassword" class="form-label">新密码:</label>
+                <input type="password" id="newPassword" name="new_password" class="form-input" required>
+            </div>
+            <button type="submit" class="btn btn-primary">修改密码</button>
+        </form>
+    </div>
 </div>
 
 <script>
+    // 存储选中的场地
+    let selectedSlots = [];
 
     function redirectToLogin() {
-        window.location.href = '/login'; // 重定向到登录页面
+        window.location.href = '/login';
     }
 
-    const token = localStorage.getItem('token'); // 从 localStorage 获取 token
-    console.log("Token from localStorage:", token); // 调试输出，检查 token 是否正确读取
+    const token = localStorage.getItem('token');
 
-    // 处理预定表单提交的事件
-    document.getElementById("reservationForm").addEventListener("submit", async function(event) {
-        event.preventDefault();
+    // 更新选中场地显示
+    function updateSelectedSlotsDisplay() {
+        const container = document.getElementById('selectedSlotsContainer');
+        container.innerHTML = selectedSlots.map(slot => `
+            <div class="selected-slot-item">
+                ${slot.courtNum}号场地 ${slot.timeSlot.slice(0, 5)}
+                <button onclick="removeSelectedSlot('${slot.courtNum}', '${slot.timeSlot}')">&times;</button>
+            </div>
+        `).join('');
+    }
 
-        const date = document.getElementById("date").value;
-        const timeSlot = document.getElementById("timeSlot").value;
-        const courtNum = document.getElementById("courtNum").value;
+    // 移除选中的场地
+    function removeSelectedSlot(courtNum, timeSlot) {
+        selectedSlots = selectedSlots.filter(slot => 
+            !(slot.courtNum === courtNum && slot.timeSlot === timeSlot)
+        );
+        updateSelectedSlotsDisplay();
+        
+        // 更新表格中对应单元格的样式
+        const cell = document.querySelector(`[data-court="${courtNum}"][data-time="${timeSlot}"]`);
+        if (cell && cell.classList.contains('available')) {
+            cell.classList.remove('selected');
+        }
+    }
+
+    // 处理单元格点击事件
+    function handleCellClick(cell, courtNum, timeSlot) {
+        if (!cell.classList.contains('available')) {
+            return;
+        }
+
+        const isSelected = cell.classList.contains('selected');
+        if (isSelected) {
+            cell.classList.remove('selected');
+            removeSelectedSlot(courtNum, timeSlot);
+        } else {
+            cell.classList.add('selected');
+            selectedSlots.push({
+                courtNum,
+                timeSlot: timeSlot,  // 保持原始格式 "HH:00:00"
+                date: document.getElementById('date').value
+            });
+            updateSelectedSlotsDisplay();
+        }
+    }
+
+    document.getElementById('reserveButton').addEventListener('click', async function() {
+        if (selectedSlots.length === 0) {
+            alert('请先选择要预定的场地！');
+            return;
+        }
+
+        // 将所有选中的场地放在同一个请求中
+        const requestData = {
+            date: selectedSlots[0].date,  // 使用第一个场地的日期
+            timeSlots: selectedSlots.map(slot => slot.timeSlot),  // 每个场地的时间
+            courtNums: selectedSlots.map(slot => slot.courtNum)  // 所有选中的场地号
+        };
 
         try {
             const response = await fetch("/reserve", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
-                    "Authorization": `Bearer ${token}` // 设置请求头
+                    "Authorization": `Bearer ${token}`
                 },
-                body: JSON.stringify({ date, timeSlot, courtNum })
+                body: JSON.stringify(requestData)
             });
 
             const result = await response.json();
 
             if (response.ok) {
-                // 成功的情况下显示成功消息
-                alert(`预定成功！场地号：${courtNum}，日期：${date}，时间：${timeSlot}`);
-            } else if (response.status === 401) { // 未授权状态码
-                // 未登录或 token 无效
+                alert(`预定请求已提交！将在22:30自动预定场地。\n场地号：${requestData.courtNums.join(', ')}`);
+            } else if (response.status === 401) {
                 alert(`预定失败：${result.error || "未登录或 token 无效"}`);
                 redirectToLogin();
+                return;
             } else {
-                // 失败的情况下显示错误消息
                 alert(`预定失败：${result.message || "未知错误"}`);
             }
         } catch (error) {
-            // 处理网络错误或其他异常
             alert(`发生错误：${error.message}`);
         }
-    });
 
-    // 处理 Token 更新表单提交的事件
-    document.getElementById("tokenForm").addEventListener("submit", async function(event) {
-        event.preventDefault();
-
-        const newToken = document.getElementById("newToken").value;
-
-        try {
-            const response = await fetch("/changeToken", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": `Bearer ${token}` // 设置请求头
-                },
-                body: JSON.stringify({ newToken })
-            });
-
-            const result = await response.json();
-
-            if (response.ok) {
-                // 成功的情况下显示成功消息
-                alert(result.message);
-            } else if (response.status === 401) { // 未授权状态码
-                // 未登录或 token 无效
-                alert(`预定失败：${result.error || "未登录或 token 无效"}`);
-                redirectToLogin();
-            } else {
-                // 失败的情况下显示错误消息
-                alert(`更新失败：${result.message || "未知错误"}`);
-            }
-        } catch (error) {
-            // 处理网络错误或其他异常
-            alert(`发生错误：${error.message}`);
-        }
-    });
-
-    document.getElementById("registerForm").addEventListener("submit", async function(event) {
-        event.preventDefault();
-
-        const username = document.getElementById("registerUsername").value;
-        const password = document.getElementById("registerPassword").value;
-        const newtoken = document.getElementById("registerToken").value;
-
-        try {
-            const response = await fetch("/register", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": `Bearer ${token}` // 设置请求头
-                },
-                body: JSON.stringify({ name: username, password: password, token: newtoken })
-            });
-
-            const result = await response.json();
-
-            if (response.ok) {
-                alert(result.message || "注册成功！");
-            } else if (response.status === 401) {
-                alert(`注册失败：${result.error || "未登录或 token 无效"}`);
-                redirectToLogin();
-            } else {
-                alert(result.error || "注册失败！");
-            }
-        } catch (error) {
-            alert(`注册发生错误：${error.message}`);
-        }
-    });
-
-    // 处理修改密码表单提交的事件
-    document.getElementById("changePasswordForm").addEventListener("submit", async function(event) {
-        event.preventDefault();
-
-        const newPassword = document.getElementById("newPassword").value;
-        const token = localStorage.getItem('token'); // 从 localStorage 获取 token
-
-        try {
-            const response = await fetch("/changePassword", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": `Bearer ${token}` // 设置请求头
-                },
-                body: JSON.stringify({ new_password: newPassword })
-            });
-
-            const result = await response.json();
-
-            if (response.ok) {
-                alert(result.message || "密码修改成功！");
-            } else if (response.status === 401) {
-                alert(`修改失败：${result.error || "未登录或 token 无效"}`);
-                redirectToLogin();
-            } else {
-                alert(result.error || "密码修改失败！");
-            }
-        } catch (error) {
-            alert(`修改密码发生错误：${error.message}`);
-        }
+        selectedSlots = [];
+        updateSelectedSlotsDisplay();
+        loadSessions();
     });
 
     // 加载场地信息并展示在表格中
     async function loadSessions() {
-        const token = localStorage.getItem('token'); // 从 localStorage 获取 token
         let date = document.getElementById("date").value;
         if (!date) {
-            // 如果没有选择日期，则使用当天日期
             const today = new Date();
-            date = today.toISOString().split('T')[0]; // 格式化为 YYYY-MM-DD
-            document.getElementById("date").value = date; // 更新输入框的值
+            date = today.toISOString().split('T')[0];
+            document.getElementById("date").value = date;
         }
 
         try {
             const response = await fetch(`/getSessions?date=${date}`, {
                 headers: {
-                    "Authorization": `Bearer ${token}` // 设置请求头
+                    "Authorization": `Bearer ${token}`
                 }
             });
             const data = await response.json();
 
             const tableBody = document.getElementById("sessionsTable").getElementsByTagName("tbody")[0];
-            tableBody.innerHTML = ''; // 清空表格内容
+            tableBody.innerHTML = '';
 
             for (let i = 1; i <= 9; i++) {
                 const row = document.createElement("tr");
@@ -354,14 +340,20 @@
                 // 第一列：场地号
                 const cell = document.createElement("td");
                 cell.textContent = `${i}号场地`;
+                cell.className = 'font-semibold';
                 row.appendChild(cell);
 
                 // 填充时段信息
                 for (let j = 0; j < 13; j++) {
-                    const timeSlot = `${(9 + j).toString().padStart(2, '0')}:00:00`;
+                    const hour = (9 + j).toString().padStart(2, '0');
+                    const timeSlot = `${hour}:00:00`;  // 后端接收的格式
+                    const displayTime = `${hour}:00`;   // 显示用的格式
                     const session = data.flat().find(s => s.placeName === `${i}号羽毛球` && s.openStartTime === timeSlot);
 
                     const sessionCell = document.createElement("td");
+                    sessionCell.dataset.court = i;
+                    sessionCell.dataset.time = timeSlot;
+
                     if (session) {
                         switch (session.sessionsStatus) {
                             case "EXPIRED":
@@ -369,8 +361,17 @@
                                 sessionCell.className = "expired";
                                 break;
                             case "NO_RESERVED":
-                                sessionCell.textContent = "可预订";
+                                sessionCell.textContent = displayTime;
                                 sessionCell.className = "available";
+                                if (selectedSlots.some(slot => 
+                                    slot.courtNum === i.toString() && 
+                                    slot.timeSlot === timeSlot
+                                )) {
+                                    sessionCell.classList.add('selected');
+                                }
+                                sessionCell.addEventListener('click', () => 
+                                    handleCellClick(sessionCell, i.toString(), timeSlot)
+                                );
                                 break;
                             case "FULLY_BOOKED":
                                 sessionCell.textContent = "已预定";
@@ -396,6 +397,87 @@
     // 当页面加载时以及日期选择器的值发生变化时，自动加载对应的场地信息
     document.addEventListener("DOMContentLoaded", loadSessions);
     document.getElementById("date").addEventListener("change", loadSessions);
+
+    // 保留原有的表单处理代码
+    document.getElementById("tokenForm").addEventListener("submit", async function(event) {
+        event.preventDefault();
+        const newToken = document.getElementById("newToken").value;
+        try {
+            const response = await fetch("/changeToken", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`
+                },
+                body: JSON.stringify({ newToken })
+            });
+            const result = await response.json();
+            if (response.ok) {
+                alert(result.message);
+            } else if (response.status === 401) {
+                alert(`更新失败：${result.error || "未登录或 token 无效"}`);
+                redirectToLogin();
+            } else {
+                alert(`更新失败：${result.message || "未知错误"}`);
+            }
+        } catch (error) {
+            alert(`发生错误：${error.message}`);
+        }
+    });
+
+    document.getElementById("registerForm").addEventListener("submit", async function(event) {
+        event.preventDefault();
+        const username = document.getElementById("registerUsername").value;
+        const password = document.getElementById("registerPassword").value;
+        const newtoken = document.getElementById("registerToken").value;
+        try {
+            const response = await fetch("/register", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`
+                },
+                body: JSON.stringify({ name: username, password: password, token: newtoken })
+            });
+            const result = await response.json();
+            if (response.ok) {
+                alert(result.message || "注册成功！");
+            } else if (response.status === 401) {
+                alert(`注册失败：${result.error || "未登录或 token 无效"}`);
+                redirectToLogin();
+            } else {
+                alert(result.error || "注册失败！");
+            }
+        } catch (error) {
+            alert(`注册发生错误：${error.message}`);
+        }
+    });
+
+    document.getElementById("changePasswordForm").addEventListener("submit", async function(event) {
+        event.preventDefault();
+        const newPassword = document.getElementById("newPassword").value;
+        try {
+            const response = await fetch("/changePassword", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`
+                },
+                body: JSON.stringify({ new_password: newPassword })
+            });
+            const result = await response.json();
+            if (response.ok) {
+                alert(result.message || "密码修改成功！");
+            } else if (response.status === 401) {
+                alert(`修改失败：${result.error || "未登录或 token 无效"}`);
+                redirectToLogin();
+            } else {
+                alert(result.error || "密码修改失败！");
+            }
+        } catch (error) {
+            alert(`修改密码发生错误：${error.message}`);
+        }
+    });
 </script>
 </body>
 </html>

@@ -33,9 +33,9 @@ type ReserveSession struct {
 }
 
 type GetSessionIDRequest struct {
-	Date     string `json:"date"`
-	TimeSlot string `json:"timeSlot"`
-	CourtNum string `json:"courtNum"`
+	Date      string   `json:"date"`
+	TimeSlots []string `json:"timeSlots"`
+	CourtNums []string `json:"courtNums"`
 }
 
 const Second = 400000000
