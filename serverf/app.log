@@ -35673,3 +35673,6 @@ signal: killed
 2025/09/26 01:36:06 请求失败: Post "https://zhcg.swjtu.edu.cn/onesports-gateway/business-service/orders/weChatSessionsReserve?timestamp=1758931200000": dial tcp 180.85.38.60:443: connect: connection refused
 2025/09/26 01:36:50 请求失败: Post "https://zhcg.swjtu.edu.cn/onesports-gateway/business-service/orders/weChatSessionsReserve?timestamp=1758931200000": dial tcp 180.85.38.60:443: connect: connection refused
 2025/09/26 01:36:53 请求失败: Post "https://zhcg.swjtu.edu.cn/onesports-gateway/business-service/orders/weChatSessionsReserve?timestamp=1758931200000": dial tcp 180.85.38.60:443: connect: connection refused
+2025/11/18 22:30:00 发送预订请求，内容：{"number":20,"orderUseDate":"1763596800000","requestsList":[{"sessionsId":"1980303127306313728"},{"sessionsId":"1980303127406977024"}],"fieldName":"犀浦室内羽毛球馆","fieldId":"1462412671863504896","siteName":"1号羽毛球","sportTypeName":"羽毛球","sportTypeId":"2"}
+2025/11/18 22:30:02 收到响应，状态码：400，内容：{"error":"Bad Request","message":"{403}当前请求需要用户登录","timestamp":"1763476201835","status":400}
+2025/11/18 22:30:02 Error:{"error":"Bad Request","message":"{403}当前请求需要用户登录","timestamp":"1763476201835","status":400}

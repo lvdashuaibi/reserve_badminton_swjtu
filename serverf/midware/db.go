@@ -3,11 +3,12 @@ package db
 import (
 	"errors"
 	"fmt"
-	"gorm.io/driver/mysql"
-	"gorm.io/gorm"
 	"log"
 	"os"
 	"sync"
+
+	"gorm.io/driver/mysql"
+	"gorm.io/gorm"
 )
 
 type User struct {
@@ -37,11 +38,9 @@ var (
 )
 
 func loadConfig() (*DatabaseConfig, error) {
-	// 读取环境变量中的密码
+	// 读取环境变量中的密码，如果未设置则使用空密码
 	password := os.Getenv("DB_PASSWORD")
-	if password == "" {
-		return nil, fmt.Errorf("环境变量 DB_PASSWORD 未设置")
-	}
+	// 允许空密码，这在本地开发环境中很常见
 
 	// 配置数据库连接信息
 	config := &DatabaseConfig{
