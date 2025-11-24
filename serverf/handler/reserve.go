@@ -1,28 +1,29 @@
 package handler
 
 import (
-	"github.com/gin-gonic/gin"
 	"net/http"
 	"serverf/entity"
 	db "serverf/midware"
 	"serverf/service"
+
+	"github.com/gin-gonic/gin"
 )
 
 func HandleReservation(c *gin.Context) {
 	req := entity.GetSessionIDRequest{}
 	if err := c.BindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request: " + err.Error()})
 		return
 	}
 
 	_, err := service.Reservation(c, req)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "failed"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
 	// 返回预定接收确认信息
-	c.JSON(http.StatusOK, gin.H{"message": "Reservation request received. It will be processed at 22:30."})
+	c.JSON(http.StatusOK, gin.H{"message": "Reservation request received and task created successfully."})
 }
 
 // 新增处理函数，用于获取场地信息并返回给前端

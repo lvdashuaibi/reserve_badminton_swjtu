@@ -2,10 +2,11 @@ package handler
 
 import (
 	"fmt"
-	"github.com/gin-gonic/gin"
 	"net/http"
 	"serverf/entity"
 	"serverf/service"
+
+	"github.com/gin-gonic/gin"
 )
 
 func HandleRegister(c *gin.Context) {
@@ -52,12 +53,14 @@ func HandleLogin(c *gin.Context) {
 	err := c.Bind(loginData)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
 	}
 	fmt.Println(loginData)
 
 	err, token := service.Login(c, loginData.Username, loginData.Password)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
 	}
 
 	c.JSON(http.StatusOK, gin.H{"token": token})

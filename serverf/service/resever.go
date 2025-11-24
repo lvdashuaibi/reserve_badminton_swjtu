@@ -24,32 +24,102 @@ func Reservation(c *gin.Context, req entity.GetSessionIDRequest) (interface{}, e
 	username := value.(string)
 	token, _ := db.GetTokenByUserName(username)
 
+	log.Printf("[预订请求] 用户=%s, 日期=%s, 场地=%v, 时间=%v", username, req.Date, req.CourtNums, req.TimeSlots)
+
 	var allSessionIDs []string
 
 	// 遍历 courtNums 和 timeSlots，获取每一对的 sessionID
 	for i := 0; i < len(req.CourtNums); i++ {
 		sessionID, err := getSessionID(token, entity.FieldID, req.Date, req.TimeSlots[i], req.CourtNums[i]+"号羽毛球", entity.SportTypeID)
 		if err != nil {
+			log.Printf("[预订请求] 获取sessionID失败: %v", err)
 			return nil, err
 		}
 		allSessionIDs = append(allSessionIDs, sessionID)
+		log.Printf("[预订请求] 获取到sessionID: %s", sessionID)
 	}
 
 	now := time.Now()
-	reqTime, err := db.GetReqTimeByUserName(username)
+
+	// 从配置管理器获取预订时间
+	cm := GetConfigManager()
+	hour, minute, second, millisec := cm.GetReservationTime()
+	// 将毫秒转换为纳秒
+	nanosec := millisec * 1000000
+
+	// 解析预订日期
+	layout := "2006-01-02"
+	reserveDate, err := time.Parse(layout, req.Date)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("日期解析失败: %v", err)
 	}
-	nextReservationTime := time.Date(now.Year(), now.Month(), now.Day(), 22, 30, 0, reqTime, now.Location())
+
+	// 预订时间应该是预订日期的前两天的配置时间
+	// 例如：预订11-29的场地，应该在11-27的22:30执行
+	reserveDate = reserveDate.AddDate(0, 0, -2)
+	nextReservationTime := time.Date(reserveDate.Year(), reserveDate.Month(), reserveDate.Day(), hour, minute, second, nanosec, now.Location())
+
+	log.Printf("[预订请求] 当前时间=%s, 预订时间=%s (预订日期前两天)", now.Format("2006-01-02 15:04:05"), nextReservationTime.Format("2006-01-02 15:04:05"))
+
+	// 立即创建任务
+	taskID := uuid.New().String()
+	ctx, cancel := context.WithCancel(context.Background())
+
+	task := &ReservationTask{
+		TaskID:       taskID,
+		Username:     username,
+		Date:         req.Date,
+		CourtName:    req.CourtNums[0] + "号羽毛球",
+		TimeSlot:     req.TimeSlots[0],
+		Status:       "running",
+		SubmitTime:   time.Now(),          // 提交时间
+		StartTime:    nil,                 // 开始时间（尚未开始）
+		ScheduleTime: nextReservationTime, // 计划执行时间
+		Message:      fmt.Sprintf("等待预订时间 %s", nextReservationTime.Format("2006-01-02 15:04:05")),
+		CancelFunc:   cancel,
+	}
+
+	// 添加到任务管理器
+	tm := GetTaskManager()
+	tm.AddTask(task)
+	log.Printf("[任务 %s] 任务已创建，用户=%s, 场地=%s, 时间=%s, 计划执行时间=%s",
+		taskID, username, task.CourtName, task.TimeSlot, nextReservationTime.Format("2006-01-02 15:04:05"))
 
 	if now.After(nextReservationTime) {
-		go reserveCourtAtTime(token, allSessionIDs, username, req)
+		log.Printf("[预订请求] 当前时间已过预订时间，立即执行")
+		go executeReservation(ctx, token, allSessionIDs, username, req, taskID)
 	} else {
-		time.AfterFunc(nextReservationTime.Sub(now), func() {
-			reserveCourtAtTime(token, allSessionIDs, username, req)
+		waitDuration := nextReservationTime.Sub(now)
+		log.Printf("[预订请求] 等待 %v 后执行", waitDuration)
+		time.AfterFunc(waitDuration, func() {
+			executeReservation(ctx, token, allSessionIDs, username, req, taskID)
 		})
 	}
 	return nil, nil
+}
+
+// executeReservation 执行预订（不创建任务，任务已经在Reservation中创建）
+func executeReservation(ctx context.Context, token string, sessionIDs []string, username string, req entity.GetSessionIDRequest, taskID string) {
+	tm := GetTaskManager()
+
+	// 设置开始时间
+	startTime := time.Now()
+	tm.UpdateTaskStartTime(taskID, startTime)
+
+	log.Printf("[任务 %s] 开始执行预订：用户=%s, 场地=%s, 时间=%s", taskID, username, req.CourtNums[0]+"号羽毛球", req.TimeSlots[0])
+	tm.UpdateTaskStatus(taskID, "running", "正在尝试预订...")
+
+	// 预定场地
+	err := reserveCourtWithContext(ctx, token, sessionIDs, entity.FieldID, req.Date, req.CourtNums[0]+"号羽毛球", entity.SportTypeID, username, req.TimeSlots[0], taskID)
+	if err != nil {
+		// 记录失败的日志或通知管理员
+		log.Printf("[任务 %s] 预订失败: %v", taskID, err)
+		tm.UpdateTaskStatus(taskID, "failed", err.Error())
+		return
+	}
+	// 记录成功的预定操作
+	log.Printf("[任务 %s] 预订成功", taskID)
+	tm.UpdateTaskStatus(taskID, "success", "预订成功！")
 }
 func getSessionID(token, fieldID, date, timeSlot, courtName, sportTypeID string) (string, error) {
 	requestBody := entity.SessionRequest{
@@ -112,16 +182,21 @@ func reserveCourtAtTime(token string, sessionIDs []string, username string, req 
 	taskID := uuid.New().String()
 	ctx, cancel := context.WithCancel(context.Background())
 
+	now := time.Now()
+	startTime := now
+
 	task := &ReservationTask{
-		TaskID:     taskID,
-		Username:   username,
-		Date:       req.Date,
-		CourtName:  req.CourtNums[0] + "号羽毛球",
-		TimeSlot:   req.TimeSlots[0],
-		Status:     "running",
-		StartTime:  time.Now(),
-		Message:    "正在尝试预订...",
-		CancelFunc: cancel,
+		TaskID:       taskID,
+		Username:     username,
+		Date:         req.Date,
+		CourtName:    req.CourtNums[0] + "号羽毛球",
+		TimeSlot:     req.TimeSlots[0],
+		Status:       "running",
+		SubmitTime:   now,
+		StartTime:    &startTime,
+		ScheduleTime: now,
+		Message:      "正在尝试预订...",
+		CancelFunc:   cancel,
 	}
 
 	// 添加到任务管理器
@@ -145,11 +220,11 @@ func reserveCourtAtTime(token string, sessionIDs []string, username string, req 
 
 func reserveCourtWithContext(ctx context.Context, token string, sessionIDs []string, fieldID, date, courtName, sportTypeID, username, timeSlot, taskID string) error {
 	tm := GetTaskManager()
+	cm := GetConfigManager()
 
-	// 定义最大重试时间为24小时
-	retryDuration := 24 * time.Hour
-	// 定义固定的重试间隔时间为5分钟
-	retryInterval := 5 * time.Minute
+	// 从配置管理器获取重试参数
+	retryDuration := cm.GetRetryDuration()
+	retryInterval := cm.GetRetryInterval()
 	// 开始重试的时间
 	startTime := time.Now()
 

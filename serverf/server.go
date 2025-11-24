@@ -50,6 +50,15 @@ func main() {
 	r.GET("/tasks", handler.MiddleWare, handler.HandleGetTasks)         // 获取任务列表
 	r.POST("/cancelTask", handler.MiddleWare, handler.HandleCancelTask) // 取消任务
 
+	// 配置管理路由（仅特权用户）
+	r.GET("/config-page", func(c *gin.Context) {
+		c.HTML(http.StatusOK, "config.html", gin.H{
+			"title": "系统配置",
+		})
+	})
+	r.GET("/config", handler.MiddleWare, handler.HandleGetConfig)     // 获取配置
+	r.POST("/config", handler.MiddleWare, handler.HandleUpdateConfig) // 更新配置
+
 	// 启动服务器
 	fmt.Println("Starting server on port 8080...")
 	r.Run(":8080")

@@ -20,6 +20,17 @@ type User struct {
 	RequestTime int    `json:"request_time" gorm:"request_time"`
 }
 
+// SystemConfig 系统配置表
+type SystemConfig struct {
+	ID                   uint `gorm:"primaryKey;autoIncrement"`
+	ReservationHour      int  `gorm:"default:22"` // 预订时间-小时
+	ReservationMinute    int  `gorm:"default:30"` // 预订时间-分钟
+	ReservationSecond    int  `gorm:"default:0"`  // 预订时间-秒
+	ReservationMillisec  int  `gorm:"default:0"`  // 预订时间-毫秒
+	RetryIntervalMinutes int  `gorm:"default:5"`  // 重试间隔（分钟）
+	RetryDurationHours   int  `gorm:"default:24"` // 重试持续时间（小时）
+}
+
 // DatabaseConfig 用来存储数据库配置信息
 type DatabaseConfig struct {
 	Username  string
@@ -81,11 +92,28 @@ func openDB() {
 	}
 
 	// 自动迁移
-	err = db.AutoMigrate(&User{})
+	err = db.AutoMigrate(&User{}, &SystemConfig{})
 	if err != nil {
 		log.Printf("数据库自动迁移失败%v\n", err)
 		return
 	}
+
+	// 初始化系统配置（如果不存在）
+	var count int64
+	db.Model(&SystemConfig{}).Count(&count)
+	if count == 0 {
+		defaultConfig := SystemConfig{
+			ReservationHour:      22,
+			ReservationMinute:    30,
+			ReservationSecond:    0,
+			ReservationMillisec:  0,
+			RetryIntervalMinutes: 5,
+			RetryDurationHours:   24,
+		}
+		db.Create(&defaultConfig)
+		log.Println("已创建默认系统配置")
+	}
+
 	//fmt.Println("数据库连接成功")
 }
 
@@ -194,4 +222,44 @@ func GetReqTimeByUserName(username string) (int, error) {
 
 	// 返回用户的邮箱
 	return user.RequestTime, nil
+}
+
+// GetSystemConfig 获取系统配置
+func GetSystemConfig() (*SystemConfig, error) {
+	config := &SystemConfig{}
+	result := db.First(config)
+	if result.Error != nil {
+		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			// 如果没有配置，创建默认配置
+			config = &SystemConfig{
+				ReservationHour:      22,
+				ReservationMinute:    30,
+				ReservationSecond:    0,
+				ReservationMillisec:  0,
+				RetryIntervalMinutes: 5,
+				RetryDurationHours:   24,
+			}
+			db.Create(config)
+			return config, nil
+		}
+		return nil, result.Error
+	}
+	return config, nil
+}
+
+// UpdateSystemConfig 更新系统配置
+func UpdateSystemConfig(config *SystemConfig) error {
+	// 获取第一条配置记录
+	var existingConfig SystemConfig
+	result := db.First(&existingConfig)
+	if result.Error != nil {
+		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			// 如果不存在，创建新配置
+			return db.Create(config).Error
+		}
+		return result.Error
+	}
+
+	// 更新现有配置
+	return db.Model(&existingConfig).Updates(config).Error
 }
