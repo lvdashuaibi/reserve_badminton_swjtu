@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>系统配置</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            color: #333;
+            font-size: 24px;
+        }
+
+        .header-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5568d3;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #218838;
+        }
+
+        .config-container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .config-section {
+            margin-bottom: 30px;
+            padding-bottom: 30px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .config-section:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-description {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .input-group input {
+            flex: 1;
+        }
+
+        .input-suffix {
+            font-size: 14px;
+            color: #666;
+            white-space: nowrap;
+        }
+
+        .time-input-group {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .time-input-group input {
+            width: 80px;
+            text-align: center;
+        }
+
+        .current-value {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 14px;
+            color: #666;
+            margin-top: 10px;
+        }
+
+        .current-value strong {
+            color: #333;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .alert {
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .warning-box {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            border-radius: 5px;
+            padding: 15px;
+            margin-top: 20px;
+        }
+
+        .warning-box h4 {
+            color: #856404;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+
+        .warning-box ul {
+            margin-left: 20px;
+            color: #856404;
+        }
+
+        .warning-box li {
+            margin-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div>
+                <h1>⚙️ 系统配置</h1>
+            </div>
+            <div class="header-buttons">
+                <button class="btn btn-primary" onclick="goToTasks()">📋 任务管理</button>
+                <button class="btn btn-secondary" onclick="goToReserve()">🏸 预订场地</button>
+            </div>
+        </div>
+
+        <div class="config-container" id="configContainer">
+            <div class="loading">
+                <div class="spinner"></div>
+                <p>加载中...</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const token = localStorage.getItem('token');
+        if (!token) {
+            window.location.href = '/login';
+        }
+
+        // 加载配置
+        async function loadConfig() {
+            try {
+                const response = await fetch('/config', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (response.status === 401) {
+                    alert('登录已过期，请重新登录');
+                    window.location.href = '/login';
+                    return;
+                }
+
+                if (response.status === 403) {
+                    document.getElementById('configContainer').innerHTML = `
+                        <div style="text-align: center; padding: 60px 20px; color: #999;">
+                            <h2>🚫 无权限访问</h2>
+                            <p>只有特权用户可以访问配置页面</p>
+                            <button class="btn btn-primary" onclick="goToReserve()" style="margin-top: 20px;">返回首页</button>
+                        </div>
+                    `;
+                    return;
+                }
+
+                const config = await response.json();
+                renderConfig(config);
+            } catch (error) {
+                console.error('加载配置失败:', error);
+                document.getElementById('configContainer').innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: #dc3545;">
+                        <p>❌ 加载失败：${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        // 渲染配置表单
+        function renderConfig(config) {
+            const container = document.getElementById('configContainer');
+            container.innerHTML = `
+                <div id="alertBox" class="alert"></div>
+
+                <form id="configForm">
+                    <!-- 预订时间配置 -->
+                    <div class="config-section">
+                        <div class="section-title">
+                            🕐 预订时间配置
+                        </div>
+                        <div class="section-description">
+                            设置系统自动发送预订请求的时间点
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">预订时间（精确到毫秒）</label>
+                            <div class="time-input-group">
+                                <input type="number" id="reservationHour" min="0" max="23"
+                                       value="${config.reservationHour}" class="form-input" required>
+                                <span class="input-suffix">时</span>
+                                <input type="number" id="reservationMinute" min="0" max="59"
+                                       value="${config.reservationMinute}" class="form-input" required>
+                                <span class="input-suffix">分</span>
+                                <input type="number" id="reservationSecond" min="0" max="59"
+                                       value="${config.reservationSecond}" class="form-input" required>
+                                <span class="input-suffix">秒</span>
+                                <input type="number" id="reservationMillisec" min="0" max="999"
+                                       value="${config.reservationMillisec}" class="form-input" required>
+                                <span class="input-suffix">毫秒</span>
+                            </div>
+                            <div class="current-value">
+                                当前配置：每天 <strong>${String(config.reservationHour).padStart(2, '0')}:${String(config.reservationMinute).padStart(2, '0')}:${String(config.reservationSecond).padStart(2, '0')}.${String(config.reservationMillisec).padStart(3, '0')}</strong> 发送预订请求
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 重试间隔配置 -->
+                    <div class="config-section">
+                        <div class="section-title">
+                            ⏱️ 重试间隔配置
+                        </div>
+                        <div class="section-description">
+                            设置预订失败后，每次重试之间的等待时间
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">重试间隔（分钟）</label>
+                            <div class="input-group">
+                                <input type="number" id="retryIntervalMinutes" min="1" max="60"
+                                       value="${config.retryIntervalMinutes}" class="form-input" required>
+                                <span class="input-suffix">分钟</span>
+                            </div>
+                            <div class="current-value">
+                                当前配置：每隔 <strong>${config.retryIntervalMinutes}</strong> 分钟重试一次
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 重试持续时间配置 -->
+                    <div class="config-section">
+                        <div class="section-title">
+                            ⏳ 重试持续时间配置
+                        </div>
+                        <div class="section-description">
+                            设置预订任务的最大重试时长，超过此时间后将停止重试
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">重试持续时间（小时）</label>
+                            <div class="input-group">
+                                <input type="number" id="retryDurationHours" min="1" max="72"
+                                       value="${config.retryDurationHours}" class="form-input" required>
+                                <span class="input-suffix">小时</span>
+                            </div>
+                            <div class="current-value">
+                                当前配置：最多重试 <strong>${config.retryDurationHours}</strong> 小时
+                                （约 <strong>${Math.floor(config.retryDurationHours * 60 / config.retryIntervalMinutes)}</strong> 次）
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="warning-box">
+                        <h4>⚠️ 注意事项</h4>
+                        <ul>
+                            <li>修改配置后，只对新创建的预订任务生效</li>
+                            <li>正在运行的任务仍使用旧配置</li>
+                            <li>建议重试间隔不要设置太短，避免频繁请求</li>
+                            <li>重试持续时间建议设置为24小时或更长</li>
+                        </ul>
+                    </div>
+
+                    <button type="submit" class="btn btn-success" style="width: 100%; margin-top: 20px; padding: 15px;">
+                        💾 保存配置
+                    </button>
+                </form>
+            `;
+
+            // 绑定表单提交事件
+            document.getElementById('configForm').addEventListener('submit', saveConfig);
+        }
+
+        // 保存配置
+        async function saveConfig(e) {
+            e.preventDefault();
+
+            const config = {
+                reservationHour: parseInt(document.getElementById('reservationHour').value),
+                reservationMinute: parseInt(document.getElementById('reservationMinute').value),
+                reservationSecond: parseInt(document.getElementById('reservationSecond').value),
+                reservationMillisec: parseInt(document.getElementById('reservationMillisec').value),
+                retryIntervalMinutes: parseInt(document.getElementById('retryIntervalMinutes').value),
+                retryDurationHours: parseInt(document.getElementById('retryDurationHours').value)
+            };
+
+            // 验证
+            if (config.reservationHour < 0 || config.reservationHour > 23) {
+                showAlert('error', '预订时间（小时）必须在 0-23 之间');
+                return;
+            }
+            if (config.reservationMinute < 0 || config.reservationMinute > 59) {
+                showAlert('error', '预订时间（分钟）必须在 0-59 之间');
+                return;
+            }
+            if (config.reservationSecond < 0 || config.reservationSecond > 59) {
+                showAlert('error', '预订时间（秒）必须在 0-59 之间');
+                return;
+            }
+            if (config.reservationMillisec < 0 || config.reservationMillisec > 999) {
+                showAlert('error', '预订时间（毫秒）必须在 0-999 之间');
+                return;
+            }
+            if (config.retryIntervalMinutes < 1) {
+                showAlert('error', '重试间隔必须至少为 1 分钟');
+                return;
+            }
+            if (config.retryDurationHours < 1) {
+                showAlert('error', '重试持续时间必须至少为 1 小时');
+                return;
+            }
+
+            try {
+                const response = await fetch('/config', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(config)
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    showAlert('success', '✅ ' + result.message);
+                    // 重新加载配置
+                    setTimeout(loadConfig, 1500);
+                } else {
+                    showAlert('error', '❌ ' + (result.error || '保存失败'));
+                }
+            } catch (error) {
+                showAlert('error', '❌ 保存失败：' + error.message);
+            }
+        }
+
+        // 显示提示信息
+        function showAlert(type, message) {
+            const alertBox = document.getElementById('alertBox');
+            alertBox.className = `alert alert-${type}`;
+            alertBox.textContent = message;
+            alertBox.style.display = 'block';
+
+            setTimeout(() => {
+                alertBox.style.display = 'none';
+            }, 5000);
+        }
+
+        // 跳转到任务管理
+        function goToTasks() {
+            window.location.href = '/tasks-page';
+        }
+
+        // 跳转到预订页面
+        function goToReserve() {
+            window.location.href = '/badminton';
+        }
+
+        // 初始加载
+        loadConfig();
+    </script>
+</body>
+</html>

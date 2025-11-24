@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"serverf/handler"
+	"serverf/service"
 
 	"github.com/gin-gonic/gin"
 )
@@ -58,6 +59,20 @@ func main() {
 	})
 	r.GET("/config", handler.MiddleWare, handler.HandleGetConfig)     // 获取配置
 	r.POST("/config", handler.MiddleWare, handler.HandleUpdateConfig) // 更新配置
+
+	// 定期预订管理路由
+	r.GET("/recurring-page", func(c *gin.Context) {
+		c.HTML(http.StatusOK, "recurring.html", gin.H{
+			"title": "定期预订",
+		})
+	})
+	r.GET("/recurring", handler.MiddleWare, handler.HandleGetRecurringReservations)      // 获取定期预订配置列表
+	r.POST("/recurring", handler.MiddleWare, handler.HandleCreateRecurringReservation)   // 创建定期预订配置
+	r.PUT("/recurring", handler.MiddleWare, handler.HandleUpdateRecurringReservation)    // 更新定期预订配置
+	r.DELETE("/recurring", handler.MiddleWare, handler.HandleDeleteRecurringReservation) // 删除定期预订配置
+
+	// 启动定期任务调度器
+	go service.GetRecurringScheduler().Start()
 
 	// 启动服务器
 	fmt.Println("Starting server on port 8080...")

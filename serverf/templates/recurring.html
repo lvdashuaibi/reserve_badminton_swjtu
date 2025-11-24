@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>定期预订配置</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            color: #333;
+            font-size: 24px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5568d3;
+        }
+
+        .btn-danger {
+            background: #f56565;
+            color: white;
+        }
+
+        .btn-success {
+            background: #48bb78;
+            color: white;
+        }
+
+        .config-list {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .config-item {
+            padding: 15px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .config-info {
+            flex: 1;
+        }
+
+        .config-name {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .config-details {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .config-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 500;
+        }
+
+        .form-input, .form-select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #e2e8f0;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        .checkbox-group {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .status-enabled {
+            background: #c6f6d5;
+            color: #22543d;
+        }
+
+        .status-disabled {
+            background: #fed7d7;
+            color: #742a2a;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📅 定期预订配置</h1>
+            <div>
+                <button class="btn btn-primary" onclick="showCreateModal()">➕ 新建配置</button>
+                <button class="btn btn-primary" onclick="location.href='/badminton'">🏠 返回首页</button>
+            </div>
+        </div>
+
+        <div class="config-list" id="configList">
+            <div class="empty-state">加载中...</div>
+        </div>
+    </div>
+
+    <!-- 创建/编辑模态框 -->
+    <div class="modal" id="configModal">
+        <div class="modal-content">
+            <h2 id="modalTitle">新建定期预订配置</h2>
+            <form id="configForm" onsubmit="saveConfig(event)">
+                <input type="hidden" id="configId">
+
+                <div class="form-group">
+                    <label class="form-label">配置名称</label>
+                    <input type="text" class="form-input" id="configName" required placeholder="例如：每周二羽毛球">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">星期几</label>
+                    <select class="form-select" id="weekday" required>
+                        <option value="0">周日</option>
+                        <option value="1">周一</option>
+                        <option value="2" selected>周二</option>
+                        <option value="3">周三</option>
+                        <option value="4">周四</option>
+                        <option value="5">周五</option>
+                        <option value="6">周六</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">场地号</label>
+                    <div class="checkbox-group" id="courtNumsGroup">
+                        <div class="checkbox-item"><input type="checkbox" value="1"> 1号</div>
+                        <div class="checkbox-item"><input type="checkbox" value="2"> 2号</div>
+                        <div class="checkbox-item"><input type="checkbox" value="3"> 3号</div>
+                        <div class="checkbox-item"><input type="checkbox" value="4"> 4号</div>
+                        <div class="checkbox-item"><input type="checkbox" value="5"> 5号</div>
+                        <div class="checkbox-item"><input type="checkbox" value="6"> 6号</div>
+                        <div class="checkbox-item"><input type="checkbox" value="7"> 7号</div>
+                        <div class="checkbox-item"><input type="checkbox" value="8"> 8号</div>
+                        <div class="checkbox-item"><input type="checkbox" value="9"> 9号</div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">时间段</label>
+                    <div class="checkbox-group" id="timeSlotsGroup">
+                        <div class="checkbox-item"><input type="checkbox" value="19:00:00"> 19:00</div>
+                        <div class="checkbox-item"><input type="checkbox" value="20:00:00"> 20:00</div>
+                        <div class="checkbox-item"><input type="checkbox" value="21:00:00"> 21:00</div>
+                    </div>
+                </div>
+
+                <div class="form-group" style="display: flex; gap: 10px; justify-content: flex-end;">
+                    <button type="button" class="btn" onclick="closeModal()">取消</button>
+                    <button type="submit" class="btn btn-success">保存</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const token = localStorage.getItem('token');
+        if (!token) {
+            window.location.href = '/login';
+        }
+
+        // 加载配置列表
+        async function loadConfigs() {
+            try {
+                const response = await fetch('/recurring', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                const data = await response.json();
+
+                if (data.reservations && data.reservations.length > 0) {
+                    renderConfigs(data.reservations);
+                } else {
+                    document.getElementById('configList').innerHTML = '<div class="empty-state">暂无定期预订配置<br>点击"新建配置"开始创建</div>';
+                }
+            } catch (error) {
+                console.error('加载配置失败:', error);
+                document.getElementById('configList').innerHTML = '<div class="empty-state">加载失败，请刷新重试</div>';
+            }
+        }
+
+        // 渲染配置列表
+        function renderConfigs(configs) {
+            const weekdays = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
+
+            const html = configs.map(config => `
+                <div class="config-item">
+                    <div class="config-info">
+                        <div class="config-name">
+                            ${config.Name}
+                            <span class="status-badge ${config.Enabled ? 'status-enabled' : 'status-disabled'}">
+                                ${config.Enabled ? '已启用' : '已禁用'}
+                            </span>
+                        </div>
+                        <div class="config-details">
+                            ${weekdays[config.Weekday]} | 场地: ${config.CourtNums} | 时间: ${config.TimeSlots}
+                        </div>
+                    </div>
+                    <div class="config-actions">
+                        <button class="btn btn-primary" onclick="editConfig(${config.ID})">编辑</button>
+                        <button class="btn ${config.Enabled ? 'btn-danger' : 'btn-success'}"
+                                onclick="toggleConfig(${config.ID}, ${!config.Enabled})">
+                            ${config.Enabled ? '禁用' : '启用'}
+                        </button>
+                        <button class="btn btn-danger" onclick="deleteConfig(${config.ID})">删除</button>
+                    </div>
+                </div>
+            `).join('');
+
+            document.getElementById('configList').innerHTML = html;
+        }
+
+        // 显示创建模态框
+        function showCreateModal() {
+            document.getElementById('modalTitle').textContent = '新建定期预订配置';
+            document.getElementById('configForm').reset();
+            document.getElementById('configId').value = '';
+            document.getElementById('configModal').style.display = 'flex';
+        }
+
+        // 关闭模态框
+        function closeModal() {
+            document.getElementById('configModal').style.display = 'none';
+        }
+
+        // 保存配置
+        async function saveConfig(event) {
+            event.preventDefault();
+
+            const courtNums = Array.from(document.querySelectorAll('#courtNumsGroup input:checked'))
+                .map(cb => cb.value);
+            const timeSlots = Array.from(document.querySelectorAll('#timeSlotsGroup input:checked'))
+                .map(cb => cb.value);
+
+            if (courtNums.length === 0) {
+                alert('请至少选择一个场地');
+                return;
+            }
+            if (timeSlots.length === 0) {
+                alert('请至少选择一个时间段');
+                return;
+            }
+
+            const data = {
+                name: document.getElementById('configName').value,
+                weekday: parseInt(document.getElementById('weekday').value),
+                courtNums: courtNums,
+                timeSlots: timeSlots
+            };
+
+            const configId = document.getElementById('configId').value;
+            const method = configId ? 'PUT' : 'POST';
+            if (configId) {
+                data.id = parseInt(configId);
+                data.enabled = true; // 保持启用状态
+            }
+
+            try {
+                const response = await fetch('/recurring', {
+                    method: method,
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    alert(result.message);
+                    closeModal();
+                    loadConfigs();
+                } else {
+                    alert('操作失败: ' + result.error);
+                }
+            } catch (error) {
+                console.error('保存失败:', error);
+                alert('保存失败，请重试');
+            }
+        }
+
+        // 删除配置
+        async function deleteConfig(id) {
+            if (!confirm('确定要删除这个配置吗？')) {
+                return;
+            }
+
+            try {
+                const response = await fetch('/recurring', {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ id: id })
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    alert(result.message);
+                    loadConfigs();
+                } else {
+                    alert('删除失败: ' + result.error);
+                }
+            } catch (error) {
+                console.error('删除失败:', error);
+                alert('删除失败，请重试');
+            }
+        }
+
+        // 切换启用/禁用状态
+        async function toggleConfig(id, enabled) {
+            // 这里需要先获取配置详情，然后更新
+            alert('功能开发中...');
+        }
+
+        // 页面加载时获取配置列表
+        loadConfigs();
+    </script>
+</body>
+</html>

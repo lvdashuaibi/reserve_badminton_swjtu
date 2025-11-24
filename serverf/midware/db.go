@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"sync"
+	"time"
 
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
@@ -29,6 +30,19 @@ type SystemConfig struct {
 	ReservationMillisec  int  `gorm:"default:0"`  // 预订时间-毫秒
 	RetryIntervalMinutes int  `gorm:"default:5"`  // 重试间隔（分钟）
 	RetryDurationHours   int  `gorm:"default:24"` // 重试持续时间（小时）
+}
+
+// RecurringReservation 定期预订配置表
+type RecurringReservation struct {
+	ID        uint   `gorm:"primaryKey;autoIncrement"`
+	Username  string `gorm:"index"`        // 用户名
+	Name      string `gorm:"size:100"`     // 配置名称
+	Weekday   int    `gorm:"default:0"`    // 星期几（0=周日, 1=周一, ..., 6=周六）
+	CourtNums string `gorm:"size:100"`     // 场地号列表，逗号分隔，如"7,8,9"
+	TimeSlots string `gorm:"size:200"`     // 时间段列表，逗号分隔，如"19:00:00,20:00:00,21:00:00"
+	Enabled   bool   `gorm:"default:true"` // 是否启用
+	CreatedAt time.Time
+	UpdatedAt time.Time
 }
 
 // DatabaseConfig 用来存储数据库配置信息
@@ -92,7 +106,7 @@ func openDB() {
 	}
 
 	// 自动迁移
-	err = db.AutoMigrate(&User{}, &SystemConfig{})
+	err = db.AutoMigrate(&User{}, &SystemConfig{}, &RecurringReservation{})
 	if err != nil {
 		log.Printf("数据库自动迁移失败%v\n", err)
 		return
@@ -262,4 +276,50 @@ func UpdateSystemConfig(config *SystemConfig) error {
 
 	// 更新现有配置
 	return db.Model(&existingConfig).Updates(config).Error
+}
+
+// GetRecurringReservations 获取用户的定期预订配置
+func GetRecurringReservations(username string) ([]RecurringReservation, error) {
+	var reservations []RecurringReservation
+	result := db.Where("username = ?", username).Find(&reservations)
+	return reservations, result.Error
+}
+
+// GetAllRecurringReservations 获取所有定期预订配置（管理员）
+func GetAllRecurringReservations() ([]RecurringReservation, error) {
+	var reservations []RecurringReservation
+	result := db.Find(&reservations)
+	return reservations, result.Error
+}
+
+// GetEnabledRecurringReservations 获取所有启用的定期预订配置
+func GetEnabledRecurringReservations() ([]RecurringReservation, error) {
+	var reservations []RecurringReservation
+	result := db.Where("enabled = ?", true).Find(&reservations)
+	return reservations, result.Error
+}
+
+// CreateRecurringReservation 创建定期预订配置
+func CreateRecurringReservation(reservation *RecurringReservation) error {
+	return db.Create(reservation).Error
+}
+
+// UpdateRecurringReservation 更新定期预订配置
+func UpdateRecurringReservation(reservation *RecurringReservation) error {
+	return db.Save(reservation).Error
+}
+
+// DeleteRecurringReservation 删除定期预订配置
+func DeleteRecurringReservation(id uint) error {
+	return db.Delete(&RecurringReservation{}, id).Error
+}
+
+// GetRecurringReservationByID 根据ID获取定期预订配置
+func GetRecurringReservationByID(id uint) (*RecurringReservation, error) {
+	var reservation RecurringReservation
+	result := db.First(&reservation, id)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	return &reservation, nil
 }
