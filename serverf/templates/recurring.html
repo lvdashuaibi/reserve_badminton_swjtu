@@ -149,8 +149,13 @@
 
         .checkbox-group {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
+            grid-template-columns: repeat(4, 1fr);
             gap: 10px;
+            max-height: 200px;
+            overflow-y: auto;
+            padding: 10px;
+            border: 1px solid #e2e8f0;
+            border-radius: 5px;
         }
 
         .checkbox-item {
@@ -242,6 +247,17 @@
                 <div class="form-group">
                     <label class="form-label">时间段</label>
                     <div class="checkbox-group" id="timeSlotsGroup">
+                        <div class="checkbox-item"><input type="checkbox" value="08:00:00"> 08:00</div>
+                        <div class="checkbox-item"><input type="checkbox" value="09:00:00"> 09:00</div>
+                        <div class="checkbox-item"><input type="checkbox" value="10:00:00"> 10:00</div>
+                        <div class="checkbox-item"><input type="checkbox" value="11:00:00"> 11:00</div>
+                        <div class="checkbox-item"><input type="checkbox" value="12:00:00"> 12:00</div>
+                        <div class="checkbox-item"><input type="checkbox" value="13:00:00"> 13:00</div>
+                        <div class="checkbox-item"><input type="checkbox" value="14:00:00"> 14:00</div>
+                        <div class="checkbox-item"><input type="checkbox" value="15:00:00"> 15:00</div>
+                        <div class="checkbox-item"><input type="checkbox" value="16:00:00"> 16:00</div>
+                        <div class="checkbox-item"><input type="checkbox" value="17:00:00"> 17:00</div>
+                        <div class="checkbox-item"><input type="checkbox" value="18:00:00"> 18:00</div>
                         <div class="checkbox-item"><input type="checkbox" value="19:00:00"> 19:00</div>
                         <div class="checkbox-item"><input type="checkbox" value="20:00:00"> 20:00</div>
                         <div class="checkbox-item"><input type="checkbox" value="21:00:00"> 21:00</div>
